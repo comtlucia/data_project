@@ -228,7 +228,7 @@ elif len(summary_lines) >= 2:
     rest = [f"더불어 {line}" for line in summary_lines[1:]]
     summary_lines = [first] + rest
     
-st.markdown("#### 🧾 인구 분석 요약")  # 제목 표시
+st.markdown("#### ✍️ 인구 분석 요약")  # 제목 표시
 st.info("\n\n".join(summary_lines))   # 강조된 요약 박스 출력
 #st.markdown("  \n\n".join(summary_lines))
 st.write("")
@@ -261,3 +261,44 @@ fig_compare.update_layout(
 )
 
 st.plotly_chart(fig_compare, use_container_width=True)
+
+# 📍 유사 지역 분석 요약 생성
+
+def get_age_ratios(population_list):
+    total = sum(population_list)
+    return {
+        "under20": round(sum(population_list[i] for i in under20) / total * 100, 1),
+        "youth": round(sum(population_list[i] for i in youth) / total * 100, 1),
+        "middle": round(sum(population_list[i] for i in middle) / total * 100, 1),
+        "elderly": round(sum(population_list[i] for i in elderly) / total * 100, 1)
+    }
+
+current_ratios = get_age_ratios(population_total)
+best_ratios = get_age_ratios(best_total)
+
+similar_traits = []
+for group in ["under20", "youth", "middle", "elderly"]:
+    if abs(current_ratios[group] - best_ratios[group]) <= 3:
+        similar_traits.append(group)
+
+trait_labels = {
+    "under20": "어린이·청소년",
+    "youth": "청년층",
+    "middle": "중장년층",
+    "elderly": "고령층"
+}
+
+st.markdown("### ✍️ 유사 지역 분석 요약")
+
+if similar_traits:
+    similar_labels = [trait_labels[g] for g in similar_traits]
+    trait_text = " · ".join(similar_labels)
+    st.info(
+        f"{selected_region}과(와) {best_match}은(는) 모두 **{trait_text}** 비중이 유사한 지역입니다.\n\n"
+        f"두 지역은 {trait_text}을 중심으로 한 정책, 생활 인프라, 상권 구성이 비슷하게 전개될 가능성이 높습니다.\n\n"
+    )
+else:
+    st.info(
+        f"{selected_region}과(와) {best_match}은(는) 전체 인구 구조가 유사하지만, 뚜렷한 세대별 비율 공통점은 상대적으로 적습니다.\n\n"
+        "생활 환경이 비슷하더라도, 각 세대별 정책 우선순위는 별도로 고려할 필요가 있습니다."
+    )
